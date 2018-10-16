@@ -1,0 +1,25 @@
+15 October 2018
+
+Mapping all output root variables:
+
+Root File: 
+
+Trees: hodo, digi, wf, info, h4
+
+Branches:
+Hodo: index, n_planes, X, Y, nFibresOnX, nFibresOnY
+
+Digi: A1, A2, ... E2, E3, VFE_CLK, MCP1, MCP2, TRG, CFD, LED, CLK, 
+index, n_channels, n_timetypes, pedestal, b_charge, b_slope, b_rms, 
+time, time_chi2, maximum, time_maximum, amp_max, time_max, chi2_max, 
+charge_tot, charge_sig, fit_ampl, fit_time, fit_chi2, calibration
+
+wf: index, WF_samples, WF_ch, WF_time, WF_val
+
+info: index, Energy, Positions
+
+h4: index, start_time, time_stamp, evt_flag, run, spill, event
+
+------------------------------------------------------------------------------
+
+python DtPlotter.py -r -d ../../160_9_Oct/compiled_roots/ --freq 160 --temp 9deg -e 50GeV --mp
