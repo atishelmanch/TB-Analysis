@@ -3,13 +3,26 @@ from math import fabs,sqrt
 import sys
 import os
 
-def amp_max_plot():
-       
-      max_events = int(sys.argv[5]) # Max events to scan per file 
-      element = sys.argv[2] # Electronics element. Ex: MCP1 or MCP2
-      square_side = str(2*float(sys.argv[4])) # side of square for hodo cut when scanning data  
-      direc_path = sys.argv[3] # directory to read files from. Ex: 120_9_Oct/reco_roots, 160_9_Oct/reco_roots, all_data
-      note = sys.argv[6]
+def amp_max_plot(vset):
+      
+      if len(vset) != 0:
+            print'Reading dictionary key items'
+            element = vset[1]
+            direc_path = vset[2]
+            square_side = str(2*float(vset[3]))
+            A1mincut = vset[4]
+            A2mincut = vset[5]
+            nb = int(vset[6])
+            max_events = int(vset[7])
+            note = vset[8]
+
+      else:
+            print'Reading command line arguments'
+            max_events = int(sys.argv[5]) # Max events to scan per file 
+            element = sys.argv[2] # Electronics element. Ex: MCP1 or MCP2
+            square_side = str(2*float(sys.argv[4])) # side of square for hodo cut when scanning data  
+            direc_path = sys.argv[3] # directory to read files from. Ex: 120_9_Oct/reco_roots, 160_9_Oct/reco_roots, all_data
+            note = sys.argv[6]
 
       file_paths = []
       file_directory = direc_path
@@ -21,6 +34,7 @@ def amp_max_plot():
                   file_paths.append(str(file_directory) + '/' + os.path.join(file)) 
 
       # Create Histograms 
+      
       h = TH2F('h','h',50,-25,25,50,-25,25)
       h2 = TH1F('h2','h2',50,0,5000)
 
@@ -29,15 +43,6 @@ def amp_max_plot():
       MCP_max_cut = 'MCP_amp_max < 10000'
 
       cut = '(fabs(hodox + 4) < ' + square_side + ') and (fabs(hodoy - 4) < ' + square_side + ') and ' + MCP_min_cut + ' and ' + MCP_max_cut
-      
-      #trees = ['hodo', 'digi', 'wf', 'info', 'h4']
-
-      #f = TFile.Open(file_paths[0])
-
-      # for tree in trees:
-      #       print 'tree = ',tree
-      #       eval('f.' + tree + '.Print()')
-            #f.hodo.Print()
 
       verbose = True
       file_i = 1

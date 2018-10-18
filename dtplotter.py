@@ -3,13 +3,40 @@ from math import fabs,sqrt
 import sys
 import os
 
-def dt_plot():
-        
-      max_events = int(sys.argv[4])  # Max events to scan per file 
+def dt_plot(vset):
+
+      print 'in dt_plot'
+      if len(vset) != 0:
+            print'Reading dictionary key items'
+            direc_path = vset[1]
+            square_side = str(2*float(vset[2]))
+            A1mincut = vset[3]
+            A2mincut = vset[4]
+            nb = int(vset[5]) # number of bins 
+            max_events = int(vset[6])
+            note = vset[7]
+            for i,item in enumerate(vset):
+                  print'vset[',i,'] = ',vset[i]
+
+
+
+      else:
+            print'Reading command line arguments'
+            direc_path = sys.argv[2] # directory to read files from. Ex: 120_9_Oct/reco_roots, 160_9_Oct/reco_roots, all_data
+            square_side = str(2*float(sys.argv[3])) # side of square for hodo cut when scanning data   
+            A1mincut = sys.argv[4]
+            A2mincut = sys.argv[5]
+            nb = int(sys.argv[6])
+            max_events = int(sys.argv[7])  # Max events to scan per file
+            note = sys.argv[8]
+
       # for now elements are just MCP1 and MCP2. Will next have options for which MCP and which crystal ( two arguments )
-      square_side = str(2*float(sys.argv[3])) # side of square for hodo cut when scanning data  
-      direc_path = sys.argv[2] # directory to read files from. Ex: 120_9_Oct/reco_roots, 160_9_Oct/reco_roots, all_data
-      note = sys.argv[5]
+      # direc_path = sys.argv[2] # directory to read files from. Ex: 120_9_Oct/reco_roots, 160_9_Oct/reco_roots, all_data
+      # square_side = str(2*float(sys.argv[3])) # side of square for hodo cut when scanning data   
+      # A1mincut = sys.argv[4]
+      # A2mincut = sys.argv[5]
+      # max_events = int(sys.argv[6])  # Max events to scan per file
+      # note = sys.argv[7]
 
       file_paths = []
       file_directory = direc_path
@@ -21,35 +48,25 @@ def dt_plot():
 
       # Create Histogram 
 
-      h = TH2F('h','h',200,0,2000,300,-2,-8)
+      h = TH2F('h','h',nb,0,2000,100,-10,0) 
+      print'nb = ',nb
 
       # Create Cuts 
       cuts = []
 
       cuts.append('( fabs(hodox + 4) < ' + square_side + ')') 
       cuts.append('( fabs(hodoy - 4) < ' + square_side + ')') 
-      cuts.append('A1 > 300')
-      cuts.append('A1 < 10000')
-      cuts.append('A2 > 300')
-      cuts.append('A2 < 10000')
+      cuts.append('( A1 > ' + A1mincut + ' )' )
+      cuts.append('( A1 < 10000 )')
+      cuts.append('( A2 > ' + A2mincut + ' )' )
+      cuts.append('( A2 < 10000 )')
 
       cut = ''
 
       for i,c in enumerate(cuts):
             cut += c 
             if i < (len(cuts) - 1):
-                  cut += ' and '
-            
-      #print'cut = ',cut
-      
-      #trees = ['hodo', 'digi', 'wf', 'info', 'h4']
-
-      #f = TFile.Open(file_paths[0])
-
-      # for tree in trees:
-      #       print 'tree = ',tree
-      #       eval('f.' + tree + '.Print()')
-            #f.hodo.Print()
+                  cut += ' and '           
 
       f = TFile.Open(file_paths[0])
 
@@ -85,12 +102,6 @@ def dt_plot():
                   A1 = float(event.amp_max[MCP1])
                   A2 = float(event.amp_max[MCP2])
 
-                  #print'A1, A2 = ',A1,A2
-
-                  #A_eff = ( A1 * A2 ) / ( sqrt( A1*A1 + A2*A2 ) )
-
-                  #print'A_eff = ',A_eff
-
                   hodox = event.X[0]
                   hodoy = event.Y[0]
 
@@ -108,6 +119,7 @@ def dt_plot():
                   # Fill h
                   if eval(cut) and A1 != -0.0 and A2 != -0.0:
                         A_eff = ( A1 * A2 ) / ( sqrt( A1*A1 + A2*A2 ) )
+                        #A_eff /  = ( A1 * A2 ) / ( sqrt( A1*A1 + A2*A2 ) )
                         h.Fill(A_eff,dt)
                   
                   # Check file progress
@@ -133,20 +145,21 @@ def dt_plot():
 
             file_i += 1
 
-      # Highest amp_max vs. X vs. Y
-      c = TCanvas()
-      h.SetStats(False)
-      h.GetXaxis().SetTitle('amp_eff_MCP1_MCP2')
-      h.GetYaxis().SetTitle('time[MCP1 + CFD] - time[MCP2 + CFD]')
-      h.GetYaxis().SetTitleOffset(1.2)
-      h.GetYaxis().SetRangeUser(-4,-6)
-      h_title = 'dt Between MCPs from' + str(scanned_events) + ' Scanned Events, ' + file_directory + ' ' + note
-      h.SetTitle(h_title)
-      h.Draw("COLZ1")
-      savepath = 'MCP_dtplot_' + note
+      
+      # c = TCanvas()
+      # h.SetStats(False)
+      # h.GetXaxis().SetTitle('amp_eff_MCP1_MCP2')
+      # h.GetYaxis().SetTitle('time[MCP1 + CFD] - time[MCP2 + CFD]')
+      # h.GetYaxis().SetTitleOffset(1.2)
+      # h.GetYaxis().SetRangeUser(-4,-6)
+      # h_title = 'dt Between MCPs from' + str(scanned_events) + ' Scanned Events, ' + file_directory + ' ' + note
+      # h.SetTitle(h_title)
+      # h.Draw("COLZ1")
+      # savepath = 'MCP_dtplot_' + note
 
-      c.SaveAs('bin/pdfs/' + savepath + '.pdf')
-      h.SaveAs('bin/roots/' + savepath + '.root')
+      # c.SaveAs('bin/pdfs/' + savepath + '.pdf')
+      # h.SaveAs('bin/roots/' + savepath + '.root')
 
       # Automatically open file
-      os.system('evince ' + 'bin/pdfs/' + savepath + '.pdf')
+      #os.system('evince ' + 'bin/pdfs/' + savepath + '.pdf')     
+      return h
