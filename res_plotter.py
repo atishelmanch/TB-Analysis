@@ -16,22 +16,76 @@ def res_plot(vset):
 
     g = TF1('g','gaus',-10,0) # Get bounds rom dt_h 
 
-    f = TFile("results/dt_vs_Aeffbrmseff_3x3.root")
+    f = TFile("results/dt_vs_Aeffo_brmseff_500bins_1214378_events_scanned_3x3.root")
 
     dt_h = f.Get("h")
 
     #xx = array('d',[])
-    arr = TObjArray()
+    fits = TObjArray()
 
-    print'before fit'
-    dt_h.FitSlicesY(g,0,-1,2,"QNR",arr) # "QNR")#,2)
-    print'after fit'
+    #print'before fit'
+    dt_h.FitSlicesY(g,0,-1,2,"QNR",fits) 
+    #print'after fit'
+
+    sig_h = fits.At(2)
+
+    # Custom fit function
+    cus_f = TF1("cus_f","([0]/x) + sqrt(2)*[1]",0.01,800)
+
+    cus_f.SetParameters(0,5)
+    cus_f.SetParameters(1,0.1)
+
+    # x[0] = N, x[1] = C
+
+    sig_h.Fit('cus_f','Q')
+
+    result = sig_h.Fit('cus_f',"SQ") # result is a TFitResultPtr
+
+    print'A = ',result.Parameter(0),'+/-',result.ParError(0)
+    print'C = ',result.Parameter(1),'+/-',result.ParError(1)
 
     c = TCanvas()
-    arr.At(2).Draw()
-    c.SaveAs("plot.pdf")
+    sig_h.Draw()
 
+    A_str = 'A = ' +  "{0:.4f}".format(result.Parameter(0)*1000) + '+/-' + "{0:.4f}".format(result.ParError(0)*1000) + 'ps'
+    c_str = 'c = ' + "{0:.4f}".format(result.Parameter(1)*1000) + '+/-' + "{0:.4f}".format(result.ParError(0)*1000) + 'ps'
+    cs_str = 'chi2 = ' + "{0:.4f}".format(result.Chi2())
     
+
+    Alatex = TLatex()
+    Alatex.SetNDC()
+    Alatex.SetTextAngle(0)
+    Alatex.SetTextColor(kBlack)
+    Alatex.SetTextFont(63)
+    Alatex.SetTextAlign(11)
+    Alatex.SetTextSize(22)
+    Alatex.DrawLatex(0.5,0.5,A_str)
+    Alatex.SetTextFont(53)
+
+    Clatex = TLatex()
+    Clatex.SetNDC()
+    Clatex.SetTextAngle(0)
+    Clatex.SetTextColor(kBlack)
+    Clatex.SetTextFont(63)
+    Clatex.SetTextAlign(11)
+    Clatex.SetTextSize(22)
+    Clatex.DrawLatex(0.5,0.4,c_str)
+    Clatex.SetTextFont(53)
+
+    Clatex = TLatex()
+    Clatex.SetNDC()
+    Clatex.SetTextAngle(0)
+    Clatex.SetTextColor(kBlack)
+    Clatex.SetTextFont(63)
+    Clatex.SetTextAlign(11)
+    Clatex.SetTextSize(22)
+    Clatex.DrawLatex(0.5,0.3,cs_str)
+    Clatex.SetTextFont(53)
+
+    c.SaveAs("plot.pdf") 
+
+    # Automatically open file
+    os.system('evince ' + 'plot.pdf')
 
     #nb = dt_h.GetNbinsX()
     #print'number of bins = ',nb

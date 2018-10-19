@@ -36,7 +36,7 @@ def dt_plot(vset):
 
       # Create Histogram 
 
-      h = TH2F('h','h',nb,0,800,nb,-10,10) 
+      h = TH2F('h','h',nb,0,800,2000,-10,10) 
       dth = TH1F('dth','dth',nb,-10,10)
 
       # Create Cuts 
