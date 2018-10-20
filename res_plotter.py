@@ -3,37 +3,45 @@ from math import fabs,sqrt
 import sys
 import os
 from array import array
-from dtplotter import dt_plot
+from dtplotter import *
 
 def res_plot(vset):
 
     print'in res plot'
 
     # Get dt_h
+
+    # From dt_ploy
+    #if len(vset) > 3: dt_h = dt_plot(vset)
+
+    dt_h = dt_plot(vset)
+    #print'dt_h = ',dt_h
+
+    # From already created histogram
+    # else:
+    #f = TFile("bin/roots/dt_vs_Aeffo_brmseff_10bins_2900_events_scanned_3x3.root")
+    #dt_h = f.Get("h")
+
+    #print'dt_plot(vset) = ',dt_plot(vset)
     #dt_h = dt_plot(vset)
+    #print'dt_h = ',dt_h
 
-    # I'm just gonna do it by slice since FitSlicesY doesn't seem to be working. This may just be because it had low statistics. 
-
-    g = TF1('g','gaus',-10,0) # Get bounds rom dt_h 
-
-    f = TFile("results/dt_vs_Aeffo_brmseff_500bins_1214378_events_scanned_3x3.root")
-
-    dt_h = f.Get("h")
-
-    #xx = array('d',[])
     fits = TObjArray()
 
-    #print'before fit'
-    dt_h.FitSlicesY(g,0,-1,2,"QNR",fits) 
-    #print'after fit'
+    # Define fit function
+    g = TF1('g','gaus',-10,0) # Get bounds rom dt_h 
+
+    #DOF = dt_h.GetNbinsX() - 2
+
+    #dt_h.FitSlicesY(g,0,-1,0,"QNR",fits) 
+    dt_h.FitSlicesY(g,0,-1,0,"QNR",fits) 
 
     sig_h = fits.At(2)
 
     # Custom fit function
-    cus_f = TF1("cus_f","([0]/x) + sqrt(2)*[1]",0.01,800)
+    cus_f = TF1("cus_f","([0]/x) + sqrt(2)*[1]",0.00001,800)
 
-    cus_f.SetParameters(0,5)
-    cus_f.SetParameters(1,0.1)
+    cus_f.SetParameters(1, 0.05)
 
     # x[0] = N, x[1] = C
 
@@ -41,15 +49,21 @@ def res_plot(vset):
 
     result = sig_h.Fit('cus_f',"SQ") # result is a TFitResultPtr
 
-    print'A = ',result.Parameter(0),'+/-',result.ParError(0)
-    print'C = ',result.Parameter(1),'+/-',result.ParError(1)
+    #print'A = ',result.Parameter(0),'+/-',result.ParError(0)
+    #print'C = ',result.Parameter(1),'+/-',result.ParError(1)
+
+    chi2 = sig_h.Chisquare(cus_f)
+    DOF = cus_f.GetNDF()
 
     c = TCanvas()
     sig_h.Draw()
 
+    print'chi2 = ',chi2
+    print'DOF = ',DOF
+
     A_str = 'A = ' +  "{0:.4f}".format(result.Parameter(0)*1000) + '+/-' + "{0:.4f}".format(result.ParError(0)*1000) + 'ps'
-    c_str = 'c = ' + "{0:.4f}".format(result.Parameter(1)*1000) + '+/-' + "{0:.4f}".format(result.ParError(0)*1000) + 'ps'
-    cs_str = 'chi2 = ' + "{0:.4f}".format(result.Chi2())
+    c_str = 'c = ' + "{0:.4f}".format(result.Parameter(1)*1000) + '+/-' + "{0:.4f}".format(result.ParError(1)*1000) + 'ps'
+    cs_str = 'reduced chi2 = ' + "{0:.4f}".format(chi2 / DOF)
     
 
     Alatex = TLatex()

@@ -1,5 +1,6 @@
 from ROOT import *
-from math import fabs,sqrt
+from math import fabs,sqrt,floor, ceil
+from array import array
 import sys
 import os
 
@@ -36,7 +37,44 @@ def dt_plot(vset):
 
       # Create Histogram 
 
-      h = TH2F('h','h',nb,0,800,2000,-10,10) 
+      # Quantile binning 
+
+#Plts.append(["fit_time[{}]-fit_time[{}]:{}".format(self.xtal[0],self.xtal[1],self.Aeff), "resolution_vs_aeff", bins[0], bins[1], bins[2], bins[3], bins[4], bins[5]])
+# p[2] = bins[0] = number of x bins 
+# p[4] = max x value 
+# p[3] = min x value 
+
+      x_min = 0
+      x_max = 1000
+      
+      tf = TFile.Open(file_paths[0])
+      tree = tf.Get('h4')
+
+      Aeff = "pow( 2 / ( (1/pow(amp_max[MCP1]/b_rms[MCP1], 2)) + (1/pow(amp_max[MCP2]/b_rms[MCP2],2)) ) , 0.5)"   
+
+      cut = ''
+
+      ## Hybrid quantile method. Uses fixed width bins up to aeff_min_quant, then quantiles above that
+      aeff_min_quant = 850                                                                             # The Aeff value above which quantiles are used
+      aeff_tmp       = TH1F('aeff',"", 100, aeff_min_quant, x_max)
+      tree.Draw(Aeff+'>>aeff', cut)                                         # Creates a temporary histogram to find the quantiles
+      #tree.Draw('hhh', cut) 
+      nquants   = int(ceil(nb/2.)+1)                                                                      # n_quantiles = nbins / 2 + 1 (round up if odd)
+      probs     = array('d', [x/(nquants-1.) for x in range(0, nquants)])                                 # Quantile proportions array
+      quantiles = array('d', [0 for x in range(0, nquants)])                                              # Bin edges, initialized as all 0's
+      aeff_tmp.GetQuantiles(nquants, quantiles, probs)                                                    # Overwrites 'quantiles' with bin edges positions
+      nfixed_bins    = int(floor(nb/2.))                                                                  # n_fixed_bins = nbins/2 + 1 (round down if odd)
+      fixed_bin_size = (aeff_min_quant-x_min)/nfixed_bins              
+      bins = array('d', [fixed_bin_size*n for n in range(nfixed_bins)]) + quantiles                       # Fixed width bins up to aeff_min_quant, then uses quantiles
+      #hh   = TH2F('hh', self.file_title+'_dt_vs_aeff_heatmap', p[2], bins, p[5], p[6], p[7])             # Return a TH2F with quantile binning
+
+      #print'bins = ',bins
+      #h = TH2F('h','h',nb,0,800,2000,-10,10) 
+      h = TH2F('h','h',nb,bins,2000,-10,10)
+
+      #print'h = ',h
+      #print'bins = ',bins
+
       dth = TH1F('dth','dth',nb,-10,10)
 
       # Create Cuts 
@@ -183,5 +221,8 @@ def dt_plot(vset):
       # Automatically open file
       # os.system('evince ' + 'bin/pdfs/' + dtsavepath + '.pdf')
 
-      return h
+      #print'h = ',h
 
+      h.SetDirectory(0)
+
+      return h
