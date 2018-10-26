@@ -12,24 +12,22 @@ def res_plot(vset):
     # Get dt_h
 
     # From dt_ploy
-    #if len(vset) > 3: dt_h = dt_plot(vset)
+    if len(vset) > 3: dt_h = dt_plot(vset)
 
-    dt_h = dt_plot(vset)
-    #print'dt_h = ',dt_h
-
-    # From already created histogram
-    # else:
-    #f = TFile("bin/roots/dt_vs_Aeffo_brmseff_10bins_2900_events_scanned_3x3.root")
-    #dt_h = f.Get("h")
-
-    #print'dt_plot(vset) = ',dt_plot(vset)
     #dt_h = dt_plot(vset)
     #print'dt_h = ',dt_h
 
+    # From already created histogram
+    else:
+        f = TFile("bin/tmp/dt_vs_Aeffo_brmseff_10bins_1214378_events_scanned_3x3.root")
+        dt_h = f.Get("h")
+
+
+    # Create object array to store 
     fits = TObjArray()
 
     # Define fit function
-    g = TF1('g','gaus',-10,0) # Get bounds rom dt_h 
+    g = TF1('g','gaus',-4,-6) # Get bounds rom dt_h 
 
     #DOF = dt_h.GetNbinsX() - 2
 
@@ -39,18 +37,26 @@ def res_plot(vset):
     sig_h = fits.At(2)
 
     # Custom fit function
-    cus_f = TF1("cus_f","([0]/x) + sqrt(2)*[1]",0.00001,800)
+    #cus_f = TF1("cus_f","([0]/x) + sqrt(2)*[1]",0.001,600)
+    cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",20.,600.) # 0.001
 
-    cus_f.SetParameters(1, 0.05)
+    cus_f.SetParameters(5, 0.05)
 
     # x[0] = N, x[1] = C
 
     sig_h.Fit('cus_f','Q')
 
-    result = sig_h.Fit('cus_f',"SQ") # result is a TFitResultPtr
 
-    #print'A = ',result.Parameter(0),'+/-',result.ParError(0)
-    #print'C = ',result.Parameter(1),'+/-',result.ParError(1)
+    result = sig_h.Fit('cus_f',"SQ") # result is a TFitResultPtr
+    #result = sig_h.Fit('cus_f',"SQNRO") # result is a TFitResultPtr
+
+    print'A = ',result.Parameter(0),'+/-',result.ParError(0)
+    print'C = ',result.Parameter(1),'+/-',result.ParError(1)
+
+
+
+
+
 
     chi2 = sig_h.Chisquare(cus_f)
     DOF = cus_f.GetNDF()
@@ -100,6 +106,23 @@ def res_plot(vset):
 
     # Automatically open file
     os.system('evince ' + 'plot.pdf')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     #nb = dt_h.GetNbinsX()
     #print'number of bins = ',nb

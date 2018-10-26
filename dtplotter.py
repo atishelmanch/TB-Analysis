@@ -1,5 +1,5 @@
 from ROOT import *
-from math import fabs,sqrt,floor, ceil
+from math import fabs,sqrt,floor,ceil
 from array import array
 import sys
 import os
@@ -15,7 +15,8 @@ def dt_plot(vset):
             A2mincut = vset[4]
             nb = int(vset[5]) # number of bins 
             max_events = int(vset[6])
-            note = vset[7]
+            XTAL_str = vset[7]
+            note = vset[8]
 
       else:
             print'Reading command line arguments'
@@ -39,13 +40,13 @@ def dt_plot(vset):
 
       # Quantile binning 
 
-#Plts.append(["fit_time[{}]-fit_time[{}]:{}".format(self.xtal[0],self.xtal[1],self.Aeff), "resolution_vs_aeff", bins[0], bins[1], bins[2], bins[3], bins[4], bins[5]])
-# p[2] = bins[0] = number of x bins 
-# p[4] = max x value 
-# p[3] = min x value 
+      #Plts.append(["fit_time[{}]-fit_time[{}]:{}".format(self.xtal[0],self.xtal[1],self.Aeff), "resolution_vs_aeff", bins[0], bins[1], bins[2], bins[3], bins[4], bins[5]])
+      # p[2] = bins[0] = number of x bins 
+      # p[4] = max x value 
+      # p[3] = min x value 
 
-      x_min = 0
-      x_max = 1000
+      x_min = 20
+      x_max = 600
       
       tf = TFile.Open(file_paths[0])
       tree = tf.Get('h4')
@@ -55,33 +56,37 @@ def dt_plot(vset):
       cut = ''
 
       ## Hybrid quantile method. Uses fixed width bins up to aeff_min_quant, then quantiles above that
-      aeff_min_quant = 850                                                                             # The Aeff value above which quantiles are used
+      aeff_min_quant = 350
+      #aeff_min_quant = 350                                                                           # The Aeff value above which quantiles are used
       aeff_tmp       = TH1F('aeff',"", 100, aeff_min_quant, x_max)
       tree.Draw(Aeff+'>>aeff', cut)                                         # Creates a temporary histogram to find the quantiles
       #tree.Draw('hhh', cut) 
-      nquants   = int(ceil(nb/2.)+1)                                                                      # n_quantiles = nbins / 2 + 1 (round up if odd)
+      nquants   = int(ceil(nb/2.)+1)                                                                  # n_quantiles = nbins / 2 + 1 (round up if odd)
       probs     = array('d', [x/(nquants-1.) for x in range(0, nquants)])                                 # Quantile proportions array
       quantiles = array('d', [0 for x in range(0, nquants)])                                              # Bin edges, initialized as all 0's
       aeff_tmp.GetQuantiles(nquants, quantiles, probs)                                                    # Overwrites 'quantiles' with bin edges positions
-      nfixed_bins    = int(floor(nb/2.))                                                                  # n_fixed_bins = nbins/2 + 1 (round down if odd)
+      nfixed_bins    = int(floor(nb/2.))                                                                # n_fixed_bins = nbins/2 + 1 (round down if odd)
       fixed_bin_size = (aeff_min_quant-x_min)/nfixed_bins              
-      bins = array('d', [fixed_bin_size*n for n in range(nfixed_bins)]) + quantiles                       # Fixed width bins up to aeff_min_quant, then uses quantiles
+      bins = array('d', [fixed_bin_size*n for n in range(nfixed_bins)]) + quantiles    
+      #bins = array('d', [fixed_bin_size*n + x_min for n in range(nfixed_bins)]) + quantiles                       # Fixed width bins up to aeff_min_quant, then uses quantiles
       #hh   = TH2F('hh', self.file_title+'_dt_vs_aeff_heatmap', p[2], bins, p[5], p[6], p[7])             # Return a TH2F with quantile binning
 
       #print'bins = ',bins
-      #h = TH2F('h','h',nb,0,800,2000,-10,10) 
-      h = TH2F('h','h',nb,bins,2000,-10,10)
+      #h = TH2F('h','h',500,0,600,1000,-10,10) 
+      h = TH2F('h','h',nb,bins,1000,-10,10)
+      #h = TH2F('h','h',nb,x_min,x_max,1000,-4,-6)
 
       #print'h = ',h
       #print'bins = ',bins
 
-      dth = TH1F('dth','dth',nb,-10,10)
+      dth = TH1F('dth','dth',50,-10,10)
+      Ah = TH1F('Ah','Ah',100,0,600)
 
       # Create Cuts 
       cuts = []
 
-      cuts.append('( fabs(hodox + 4) < ' + square_side + ')') 
-      cuts.append('( fabs(hodoy - 4) < ' + square_side + ')') 
+      cuts.append('( fabs(hodox + 4) <= ' + str(float(square_side)/2) + ')') 
+      cuts.append('( fabs(hodoy - 4) <= ' + str(float(square_side)/2) + ')') 
       cuts.append('( A1 > ' + A1mincut + ' )' )
       #cuts.append('( A1 < 10000 )')
       cuts.append('( A2 > ' + A2mincut + ' )' )
@@ -118,7 +123,9 @@ def dt_plot(vset):
                   MCP1 = eval('f.digi.MCP1')
                   MCP2 = eval('f.digi.MCP2')
                   CFD = eval('f.digi.CFD')
-
+                  VFE_CLK = eval('f.digi.CFD')
+                  CLK = eval('f.digi.CLK')
+                  
                   A1 = float(event.amp_max[MCP1])
                   A2 = float(event.amp_max[MCP2])
 
@@ -128,18 +135,36 @@ def dt_plot(vset):
                   hodox = event.X[0]
                   hodoy = event.Y[0]
 
-                  t1 = float(event.time[MCP1 + CFD])
-                  t2 = float(event.time[MCP2 + CFD])
+                  if(XTAL_str == 'MCP'): 
+                        t1 = float(event.time[MCP1 + CFD])
+                        t2 = float(event.time[MCP2 + CFD])
+                        dt = t2 - t1
 
-                  dt = t2 - t1 
+                  else: 
+                        XTAL = eval('f.digi.' + XTAL_str)
+                        ft = float(event.fit_time[XTAL])
+                        t1 = float(event.time[MCP1 + CFD])
+                        t2 = float(event.time[VFE_CLK + CLK])
 
+                        dt = ft - t1 - t2 
+
+
+                  #A_eff = sqrt( 2 / ( (A1/brms1)**(-2) + (A2/brms2)**(-2) ) )
                   # Fill h
+                  #if eval(cut) and A1 != -0.0 and A2 != -0.0:
+                  #if eval(cut) and A1 != -0.0 and A2 != -0.0 and A1 > 20 and A2 > 20:
                   if eval(cut) and A1 != -0.0 and A2 != -0.0:
 
                         A_eff = sqrt( 2 / ( (A1/brms1)**(-2) + (A2/brms2)**(-2) ) )
-                       #print'dt = ',dt
+                        Ah.Fill(A_eff) 
                         h.Fill(A_eff,dt)
                         dth.Fill(dt)
+                        #Ah.Fill(A_eff)
+                        #if (A_eff > 20.):
+                              #print'Aeff = ',A_eff
+                              #Ah.Fill(A_eff) 
+                              #h.Fill(A_eff,dt)
+                              #dth.Fill(dt)
                   
                   # Check file progress
                   percentage = int((float(event_i) / float(total_num_events))*100)
@@ -186,9 +211,8 @@ def dt_plot(vset):
 
       h.Draw("COLZ1")
 
-      c.SaveAs('bin/pdfs/' + savepath + '.pdf')
-      h.SaveAs('bin/roots/' + savepath + '.root')
-
+      c.SaveAs('bin/tmp/' + savepath + '.pdf')
+      h.SaveAs('bin/tmp/' + savepath + '.root')
 
       # dt distribution 
 
@@ -209,19 +233,48 @@ def dt_plot(vset):
       dth.SetTitle(dth_title)
       dth.GetXaxis().SetTitle('time[MCP1 + CFD] - time[MCP2 + CFD]')
       dth.GetYaxis().SetTitle('Events')
-      dth.GetYaxis().SetTitleOffset(1.5)
+      #dth.GetYaxis().SetTitleOffset(1.5)
       dth.SetFillColor(kBlue - 3)
 
       dth.Draw()
 
-      c.SaveAs('bin/pdfs/' + dtsavepath + '.pdf')
-      dth.SaveAs('bin/roots/' + dtsavepath + '.root')
+      c.SaveAs('bin/tmp/' + dtsavepath + '.pdf')
+      dth.SaveAs('bin/tmp/' + dtsavepath + '.root')
 
+
+      # A_eff / b_rms_eff distribution
+
+      notes = ['Aeff_distribution', str(nb) + 'bins', str(scanned_events) + '_events_scanned', square_side + 'x' + square_side]
+
+      Asavepath = ''
+      Ah_title = ''
+
+      for i,note in enumerate(notes):
+            Asavepath += note 
+            Ah_title += note
+            if i < (len(notes) - 1):
+                  Asavepath += '_' 
+                  Ah_title += ', '  
+
+      c = TCanvas()
+      #h.SetStats(False)
+      Ah.SetTitle(Ah_title)
+      Ah.GetXaxis().SetTitle('time[MCP1 + CFD] - time[MCP2 + CFD]')
+      Ah.GetYaxis().SetTitle('Events')
+      #dth.GetYaxis().SetTitleOffset(1.5)
+      Ah.SetFillColor(kBlue - 3)
+
+      Ah.Draw()
+
+      c.SaveAs('bin/tmp/' + Asavepath + '.pdf')
+      Ah.SaveAs('bin/tmp/' + Asavepath + '.root')
 
       # Automatically open file
-      # os.system('evince ' + 'bin/pdfs/' + dtsavepath + '.pdf')
+      #os.system('evince ' + 'bin/tmp/' + savepath + '.pdf')
 
       #print'h = ',h
+
+      ####
 
       h.SetDirectory(0)
 

@@ -41,8 +41,8 @@ def amp_max_plot(vset):
       # Create Cuts 
       cuts = []
 
-      cuts.append('( fabs(hodox + 4) <= ' + square_side + ')') 
-      cuts.append('( fabs(hodoy - 4) <= ' + square_side + ')') 
+      cuts.append('( fabs(hodox + 4) <= ' + str(float(square_side)/2) + ')') 
+      cuts.append('( fabs(hodoy - 4) <= ' + str(float(square_side)/2) + ')') 
       cuts.append('( MCP_amp_max >= ' + ll + ' )' )
       cuts.append('( MCP_amp_max <= ' + ul + ' )')
 

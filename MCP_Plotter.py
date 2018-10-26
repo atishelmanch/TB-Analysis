@@ -14,15 +14,15 @@ gROOT.SetBatch(True) # Don't plot upon Draw command
 def main():
       #os.system('source /cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.12.06/x86_64-centos7-gcc48-opt/root/bin/thisroot.csh')
 
-      vset = [] # variables set 
+      vset = [] # variable set 
 
-      # Get variables from dictionary key 
+      # Get variable values from dictionary key 
       # command line: python MCP_Plotter.py key
       if len(sys.argv) == 2:
             vset = var_d(sys.argv[1])
             plot_type = vset[0]
 
-      # Get variables from command line 
+      # Get variable values from command line 
       # command line: python MCP_Plotter.py plot_type var1 var2 var3 ... 
       else: 
             plot_type = sys.argv[1]
