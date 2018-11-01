@@ -45,8 +45,8 @@ def dt_plot(vset):
       # p[4] = max x value 
       # p[3] = min x value 
 
-      x_min = 20
-      x_max = 600
+      x_min = 20.
+      x_max = 600.
       
       tf = TFile.Open(file_paths[0])
       tree = tf.Get('h4')
@@ -56,7 +56,7 @@ def dt_plot(vset):
       cut = ''
 
       ## Hybrid quantile method. Uses fixed width bins up to aeff_min_quant, then quantiles above that
-      aeff_min_quant = 350
+      aeff_min_quant = 324
       #aeff_min_quant = 350                                                                           # The Aeff value above which quantiles are used
       aeff_tmp       = TH1F('aeff',"", 100, aeff_min_quant, x_max)
       tree.Draw(Aeff+'>>aeff', cut)                                         # Creates a temporary histogram to find the quantiles
@@ -67,14 +67,13 @@ def dt_plot(vset):
       aeff_tmp.GetQuantiles(nquants, quantiles, probs)                                                    # Overwrites 'quantiles' with bin edges positions
       nfixed_bins    = int(floor(nb/2.))                                                                # n_fixed_bins = nbins/2 + 1 (round down if odd)
       fixed_bin_size = (aeff_min_quant-x_min)/nfixed_bins              
-      bins = array('d', [fixed_bin_size*n for n in range(nfixed_bins)]) + quantiles    
+      bins = array('d', [fixed_bin_size*n + x_min for n in range(nfixed_bins)]) + quantiles    
       #bins = array('d', [fixed_bin_size*n + x_min for n in range(nfixed_bins)]) + quantiles                       # Fixed width bins up to aeff_min_quant, then uses quantiles
       #hh   = TH2F('hh', self.file_title+'_dt_vs_aeff_heatmap', p[2], bins, p[5], p[6], p[7])             # Return a TH2F with quantile binning
 
-      #print'bins = ',bins
-      #h = TH2F('h','h',500,0,600,1000,-10,10) 
-      h = TH2F('h','h',nb,bins,1000,-10,10)
-      #h = TH2F('h','h',nb,x_min,x_max,1000,-4,-6)
+      print'bins = ',bins
+      #h = TH2F('h','h',nb,bins,1000,-6,-4) # With quantile
+      h = TH2F('h','h',nb,x_min,x_max,800,-6,-4) # Without quantile 
 
       #print'h = ',h
       #print'bins = ',bins
@@ -159,12 +158,13 @@ def dt_plot(vset):
                         Ah.Fill(A_eff) 
                         h.Fill(A_eff,dt)
                         dth.Fill(dt)
+
                         #Ah.Fill(A_eff)
                         #if (A_eff > 20.):
                               #print'Aeff = ',A_eff
-                              #Ah.Fill(A_eff) 
-                              #h.Fill(A_eff,dt)
-                              #dth.Fill(dt)
+                              # Ah.Fill(A_eff) 
+                              # h.Fill(A_eff,dt)
+                              # dth.Fill(dt)
                   
                   # Check file progress
                   percentage = int((float(event_i) / float(total_num_events))*100)
@@ -270,7 +270,7 @@ def dt_plot(vset):
       Ah.SaveAs('bin/tmp/' + Asavepath + '.root')
 
       # Automatically open file
-      #os.system('evince ' + 'bin/tmp/' + savepath + '.pdf')
+      os.system('evince ' + 'bin/tmp/' + savepath + '.pdf')
 
       #print'h = ',h
 
