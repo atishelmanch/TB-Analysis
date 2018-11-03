@@ -1,10 +1,21 @@
 from ROOT import *
+#from math import *
 from math import fabs,sqrt,floor,ceil
 from array import array
 import sys
 import os
 
 def dt_plot(vset):
+
+      #gSystem.AddIncludePath(" -I/afs/cern.ch/work/a/atishelm/CMSSW_9_0_1/src/Oct2018TB/H4Analysis/interface ;")
+      #gSystem.AddLinkedLibs(" /afs/cern.ch/work/a/atishelm/CMSSW_9_0_1/src/Oct2018TB/H4Analysis/lib/*.so ;")
+
+      gROOT.ProcessLine(".L /afs/cern.ch/work/a/atishelm/CMSSW_9_0_1/src/Oct2018TB/H4Analysis/interface/TrackTree.h")
+      gROOT.ProcessLine(".L /afs/cern.ch/work/a/atishelm/CMSSW_9_0_1/src/Oct2018TB/H4Analysis/interface/PositionTree.h")
+      #gROOT.ProcessLine(".L /afs/cern.ch/work/a/atishelm/CMSSW_9_0_1/src/Oct2018TB/H4Analysis/CfgManager/interface/CfgManager.h")
+      #gROOT.ProcessLine(".L /afs/cern.ch/work/a/atishelm/CMSSW_9_0_1/src/Oct2018TB/H4Analysis/interface/Track.h")
+      # #gROOT.ProcessLine(".L interface/Track.h;")
+      # #gROOT.ProcessLine(".L H4Analysis/interface/*")
 
       print 'in dt_plot'
       if len(vset) != 0:
@@ -15,8 +26,9 @@ def dt_plot(vset):
             A2mincut = vset[4]
             nb = int(vset[5]) # number of bins 
             max_events = int(vset[6])
-            XTAL_str = vset[7]
-            note = vset[8]
+            x_min = float(vset[7])
+            XTAL_str = vset[8]
+            note = vset[9]
 
       else:
             print'Reading command line arguments'
@@ -26,7 +38,9 @@ def dt_plot(vset):
             A2mincut = sys.argv[5]
             nb = int(sys.argv[6])
             max_events = int(sys.argv[7])  # Max events to scan per file
-            note = sys.argv[8]
+            x_min = float(vset[8])
+            XTAL_str = vset[9]
+            note = sys.argv[10]
 
       file_paths = []
       file_directory = direc_path
@@ -35,6 +49,8 @@ def dt_plot(vset):
             if '.root' in file:
                   print '     Found File: ',os.path.join(file)
                   file_paths.append(str(file_directory) + '/' + os.path.join(file)) 
+
+
 
       # Create Histogram 
 
@@ -45,7 +61,9 @@ def dt_plot(vset):
       # p[4] = max x value 
       # p[3] = min x value 
 
-      x_min = 20.
+####
+
+      #x_min = 20.
       x_max = 600.
       
       tf = TFile.Open(file_paths[0])
@@ -71,9 +89,13 @@ def dt_plot(vset):
       #bins = array('d', [fixed_bin_size*n + x_min for n in range(nfixed_bins)]) + quantiles                       # Fixed width bins up to aeff_min_quant, then uses quantiles
       #hh   = TH2F('hh', self.file_title+'_dt_vs_aeff_heatmap', p[2], bins, p[5], p[6], p[7])             # Return a TH2F with quantile binning
 
-      print'bins = ',bins
-      #h = TH2F('h','h',nb,bins,1000,-6,-4) # With quantile
-      h = TH2F('h','h',nb,x_min,x_max,800,-6,-4) # Without quantile 
+
+#####
+
+      #print'bins = ',bins
+      h = TH2F('h','h',nb,bins,400,-5.4,-4.4) # With quantile
+      #h = TH2F('h','h',nb,x_min,x_max,800,-6,-4) # Without quantile 
+      #h = TH2F('h','h',nb,x_min,x_max,400,-5.4,-4.4) # Without quantile 
 
       #print'h = ',h
       #print'bins = ',bins
@@ -87,7 +109,7 @@ def dt_plot(vset):
       cuts.append('( fabs(hodox + 4) <= ' + str(float(square_side)/2) + ')') 
       cuts.append('( fabs(hodoy - 4) <= ' + str(float(square_side)/2) + ')') 
       cuts.append('( A1 > ' + A1mincut + ' )' )
-      #cuts.append('( A1 < 10000 )')
+      #cuts.append('( A1 < 10000 )') # Check overflow bin? 
       cuts.append('( A2 > ' + A2mincut + ' )' )
       #cuts.append('( A2 < 10000 )')
 
@@ -102,6 +124,7 @@ def dt_plot(vset):
       file_i = 1
       event_i = 1
       scanned_events = 0
+      entries = 0
 
       for path in file_paths:
 
@@ -114,8 +137,29 @@ def dt_plot(vset):
             if int(max_events) == -1:
                   scanned_events += total_num_events
             if verbose: print 'total num events = ', total_num_events
+                  
+            #ii = 0
+            #pos_exists = False
+            e_emp = 0
 
             for event in f.h4:
+
+                  #print'bool(event.fitResult[0].x()) = ',str(event.fitResult[0].x())
+
+                  #print'val = ',event.fitResult[0].x()
+
+                  val = event.fitResult
+                  val_l = len(val)
+                  #print'val = ',val
+                  #print'len(val) = ',len(val)
+
+                  if val_l == 0:
+                        #print'No x fit result value, skipping event' 
+                        e_emp += 1
+                        continue
+
+                  #ii += 1
+                  #if (ii < 100): continue 
 
                   # Define variables 
 
@@ -124,6 +168,8 @@ def dt_plot(vset):
                   CFD = eval('f.digi.CFD')
                   VFE_CLK = eval('f.digi.CFD')
                   CLK = eval('f.digi.CLK')
+                  #hodox = float(eval(f.track_tree.fitResult[0].x()))
+                  #hodoy = float(eval(f.track_tree.fitResult[0].x()))
                   
                   A1 = float(event.amp_max[MCP1])
                   A2 = float(event.amp_max[MCP2])
@@ -131,8 +177,16 @@ def dt_plot(vset):
                   brms1 = float(event.b_rms[MCP1])
                   brms2 = float(event.b_rms[MCP2])
 
-                  hodox = event.X[0]
-                  hodoy = event.Y[0]
+                  #hodox = event.X[0]
+                  #hodoy = event.Y[0]
+
+                  #print'bool = ',bool(event.fitResult[0].x())
+
+                  hodox = event.fitResult[0].x() # new x and y positions
+                  hodoy = event.fitResult[0].y() 
+
+                  #print'hodox = ',hodox
+                  #print'hodoy = ',hodoy
 
                   if(XTAL_str == 'MCP'): 
                         t1 = float(event.time[MCP1 + CFD])
@@ -152,7 +206,10 @@ def dt_plot(vset):
                   # Fill h
                   #if eval(cut) and A1 != -0.0 and A2 != -0.0:
                   #if eval(cut) and A1 != -0.0 and A2 != -0.0 and A1 > 20 and A2 > 20:
+                  #print'A1 = ',A1
+                  #print'A2 = ',A2
                   if eval(cut) and A1 != -0.0 and A2 != -0.0:
+                        entries += 1
 
                         A_eff = sqrt( 2 / ( (A1/brms1)**(-2) + (A2/brms2)**(-2) ) )
                         Ah.Fill(A_eff) 
@@ -186,6 +243,8 @@ def dt_plot(vset):
 
             file_i += 1
 
+      print e_emp,' events missing position data'
+      print entries,' entries'
       # Create save path 
 
       #path_notes = []
@@ -203,7 +262,7 @@ def dt_plot(vset):
 
       # Plot
       c = TCanvas()
-      #h.SetStats(False)
+      h.SetStats(False)
       h.SetTitle(h_title)
       h.GetXaxis().SetTitle('(amp_eff_MCP1_MCP2) / b_rms_eff')
       h.GetYaxis().SetTitle('time[MCP1 + CFD] - time[MCP2 + CFD]')
