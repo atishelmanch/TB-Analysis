@@ -5,6 +5,9 @@ import os
 
 def amp_max_plot(vset):
       
+      gROOT.ProcessLine(".L /afs/cern.ch/work/a/atishelm/CMSSW_9_0_1/src/Oct2018TB/H4Analysis/interface/TrackTree.h")
+      gROOT.ProcessLine(".L /afs/cern.ch/work/a/atishelm/CMSSW_9_0_1/src/Oct2018TB/H4Analysis/interface/PositionTree.h")
+
       if len(vset) != 0:
             print'Reading dictionary key items'
             element = vset[1]
@@ -57,6 +60,7 @@ def amp_max_plot(vset):
       file_i = 1
       event_i = 1
       scanned_events = 0
+      e_emp = 0
 
       for path in file_paths:
 
@@ -72,8 +76,18 @@ def amp_max_plot(vset):
 
             for event in f.h4:
 
-                  hodox = event.X[0]
-                  hodoy = event.Y[0]
+                  val = event.fitResult
+                  val_l = len(val)
+                  #print'val = ',val
+                  #print'len(val) = ',len(val)
+
+                  if val_l == 0:
+                        #print'No x fit result value, skipping event' 
+                        e_emp += 1
+                        continue
+
+                  hodox = event.fitResult[0].x() # new x and y positions
+                  hodoy = event.fitResult[0].y() 
 
                   MCP = eval('f.digi.' + element)
 
@@ -107,7 +121,7 @@ def amp_max_plot(vset):
             file_i += 1
 
       # Create save path 
-
+      print e_emp,' events missing position data'
       #path_notes = []
 
       gStyle.SetStatY(0.9)                                # Y-position (fraction of pad size)                

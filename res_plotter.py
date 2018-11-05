@@ -11,16 +11,18 @@ def res_plot(vset):
 
     print'in res plot'
 
-    x_min = float(vset[7])
+    
 
     # Get dt_h
 
     # From dt_plot
-    if len(vset) > 3: dt_h = dt_plot(vset)
+    if len(vset) > 3: 
+        dt_h = dt_plot(vset)
+        x_min = float(vset[7])
 
     # From already created histogram
     else:
-        f = TFile("bin/tmp/dt_vs_Aeffo_brmseff_10bins_1214378_events_scanned_3x3.root")
+        f = TFile("bin/tmp/dt_vs_Aeffo_brmseff_15bins_1712025_events_scanned_3x3.root")
         dt_h = f.Get("h")
 
     # Create object array to store 
@@ -91,7 +93,8 @@ def res_plot(vset):
 
     sig_h = fit_params.At(2)
 
-    cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",float(vset[7]),600.) # 0.001
+    #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",x_min,600.) # 0.001
+    cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",30,600.) # 0.001
     cus_f.SetParameters(5, 0.05)
     sig_h.Fit('cus_f','Q')
     result = sig_h.Fit('cus_f',"SQ") # result is a TFitResultPtr

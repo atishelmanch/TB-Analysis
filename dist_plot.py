@@ -7,6 +7,9 @@ def dist_plot(vset):
       
       # Read variables 
 
+      gROOT.ProcessLine(".L /afs/cern.ch/work/a/atishelm/CMSSW_9_0_1/src/Oct2018TB/H4Analysis/interface/TrackTree.h")
+      gROOT.ProcessLine(".L /afs/cern.ch/work/a/atishelm/CMSSW_9_0_1/src/Oct2018TB/H4Analysis/interface/PositionTree.h")
+
       if len(vset) != 0:
             print'Reading dictionary key items'
 
@@ -70,6 +73,7 @@ def dist_plot(vset):
       file_i = 1
       event_i = 1
       scanned_events = 0
+      e_emp = 0
 
       for path in file_paths:
 
@@ -85,9 +89,22 @@ def dist_plot(vset):
 
             for event in f.h4:
 
+                  val = event.fitResult
+                  val_l = len(val)
+                  #print'val = ',val
+                  #print'len(val) = ',len(val)
+
+                  if val_l == 0:
+                        #print'No x fit result value, skipping event' 
+                        e_emp += 1
+                        continue
+
                   # Get Event Value
-                  hodox = event.X[0]
-                  hodoy = event.Y[0]
+                  # hodox = event.X[0]
+                  # hodoy = event.Y[0]
+
+                  hodox = event.fitResult[0].x() # new x and y positions
+                  hodoy = event.fitResult[0].y() 
 
                   val_st = 'event.' + variable + '[' + tree_el + ']'
                   value = eval(val_st)
@@ -120,6 +137,8 @@ def dist_plot(vset):
 
 
       # Create save path 
+      print e_emp,' events missing position data'
+      #print entries,' entries'      
 
       #path_notes = []
       notes = [variable, element, str(scanned_events) + '_events_scanned', square_side + 'x' + square_side]

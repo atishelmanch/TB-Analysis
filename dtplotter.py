@@ -27,8 +27,9 @@ def dt_plot(vset):
             nb = int(vset[5]) # number of bins 
             max_events = int(vset[6])
             x_min = float(vset[7])
-            XTAL_str = vset[8]
-            note = vset[9]
+            q_min = float(vset[8])
+            XTAL_str = vset[9]
+            note = vset[10]
 
       else:
             print'Reading command line arguments'
@@ -39,8 +40,9 @@ def dt_plot(vset):
             nb = int(sys.argv[6])
             max_events = int(sys.argv[7])  # Max events to scan per file
             x_min = float(vset[8])
-            XTAL_str = vset[9]
-            note = sys.argv[10]
+            q_min = float(vset[9])
+            XTAL_str = vset[10]
+            note = sys.argv[11]
 
       file_paths = []
       file_directory = direc_path
@@ -74,7 +76,7 @@ def dt_plot(vset):
       cut = ''
 
       ## Hybrid quantile method. Uses fixed width bins up to aeff_min_quant, then quantiles above that
-      aeff_min_quant = 324
+      aeff_min_quant = q_min
       #aeff_min_quant = 350                                                                           # The Aeff value above which quantiles are used
       aeff_tmp       = TH1F('aeff',"", 100, aeff_min_quant, x_max)
       tree.Draw(Aeff+'>>aeff', cut)                                         # Creates a temporary histogram to find the quantiles
@@ -100,7 +102,7 @@ def dt_plot(vset):
       #print'h = ',h
       #print'bins = ',bins
 
-      dth = TH1F('dth','dth',50,-10,10)
+      dth = TH1F('dth','dth',50,-6,-4)
       Ah = TH1F('Ah','Ah',100,0,600)
 
       # Create Cuts 
@@ -126,6 +128,8 @@ def dt_plot(vset):
       scanned_events = 0
       entries = 0
 
+      e_emp = 0
+
       for path in file_paths:
 
             if verbose: print 'Reading File ' + str(file_i) + '/' + str(len(file_paths)) + ': ',path
@@ -140,7 +144,7 @@ def dt_plot(vset):
                   
             #ii = 0
             #pos_exists = False
-            e_emp = 0
+            #e_emp = 0
 
             for event in f.h4:
 
