@@ -7,6 +7,7 @@ from amp_max_plotter import *
 from res_plotter import *
 from variable_dict import *
 from dist_plot import *
+from twodplot import *
 
 gROOT.SetBatch(True) # Don't plot upon Draw command
 
@@ -42,6 +43,10 @@ def main():
       if (plot_type == 'res'):
             print 'Making resolution plot'
             res_plot(vset) 
+
+      if (plot_type == '2d'):
+            print 'Making 2d plot'
+            TwoD_plot(vset)
 
       print'Finished'
 

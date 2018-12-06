@@ -7,22 +7,35 @@ from dtplotter import *
 
 def res_plot(vset):
 
+    if len(vset) > 2:
+
+        direc_path = vset[1]
+        square_side = vset[2]
+        A1mincut = vset[3]
+        A2mincut = vset[4]
+        nb = int(vset[5]) # number of bins 
+        max_events = int(vset[6])
+        x_min = float(vset[7])
+        q_min = float(vset[8])
+        XTAL_str = vset[9]
+        note = vset[10]
+
     gStyle.SetOptFit(1)
 
     print'in res plot'
-
-    
 
     # Get dt_h
 
     # From dt_plot
     if len(vset) > 3: 
-        dt_h = dt_plot(vset)
+        dt_h, scanned_events = dt_plot(vset)
         x_min = float(vset[7])
 
     # From already created histogram
     else:
-        f = TFile("bin/tmp/dt_vs_Aeffo_brmseff_15bins_1712025_events_scanned_3x3.root")
+        #f = TFile("bin/tmp/dt_vs_Aeffo_brmseff_15bins_1712025_events_scanned_3x3.root") 
+        f = TFile("bin/tmp/dt_vs_Aeffo_brmseff_1000bins_Qstart_-1_32000_events_scanned_3x3.root")
+        
         dt_h = f.Get("h")
 
     # Create object array to store 
@@ -34,7 +47,8 @@ def res_plot(vset):
     #ss_fits.Add() 
 
     # Define fit function
-    g = TF1('g','gaus',-5.4,-4.4) # Get bounds rom dt_h 
+    #g = TF1('g','gaus',-5.4,-4.4) # Get bounds from dt_h 
+    g = TF1('g','gaus',0,4)
 
     # #-------------------------------------------------------------
 
@@ -80,8 +94,9 @@ def res_plot(vset):
     dt_h.FitSlicesY(g,1,-1,0,"QNR",fit_params) # 0 is underflow bin 
 
     nb = dt_h.GetNbinsX()
-    for i in range(nb):
+    for i in range(1, nb): # + 1 to add underflow bin 
     #for i in range(3,4):
+        print'i = ',i
         dt_h_tmp = TH1F()
         dt_h_tmp = dt_h.ProjectionY('dt_h_tmp',i,i)
         dt_h_tmp.Fit(g,"Q")
@@ -90,11 +105,13 @@ def res_plot(vset):
         cc = TCanvas()
         dt_h_tmp.Draw()
         cc.SaveAs("bin/res/ss_fit" + str(i) + ".png")
+        #os.system('evince' + " bin/res/ss_fit" + str(i) + ".png"
 
     sig_h = fit_params.At(2)
 
     #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",x_min,600.) # 0.001
-    cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",30,600.) # 0.001
+    #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",30,600.) # 0.001 MCP12
+    cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + [1]*[1]) ",0,12000) # C3 MCP1
     cus_f.SetParameters(5, 0.05)
     sig_h.Fit('cus_f','Q')
     result = sig_h.Fit('cus_f',"SQ") # result is a TFitResultPtr
@@ -111,7 +128,7 @@ def res_plot(vset):
 
     c = TCanvas()
 
-    gPad.DrawFrame(0.,0.,600.,0.15,"Sigma dt vs. Aeff/brmseff")
+    #gPad.DrawFrame(0.,0.,600.,0.15,"Sigma dt vs. Aeff/brmseff") # For MCP1 
     #sig_h.GetXaxis().
     c.cd()
     #sig_h.SetTitle("Sigma dt vs. Aeff/brmseff")
@@ -157,68 +174,31 @@ def res_plot(vset):
     Clatex.DrawLatex(0.3,0.65,cs_str)
     Clatex.SetTextFont(53)
 
-    c.SaveAs("bin/res/res_fit.pdf") 
-    c.SaveAs("bin/res/res_fit.png") 
-    sig_h.SaveAs("bin/res/sig_h.root")
+    if len(vset) > 2:
+
+        qinfo = str(q_min)
+        if qinfo == '0.0':
+            qinfo = 'NoQuant'
+        else:
+            qinfo = 'Qstart_' + str("{0:.0f}".format(q_min))
+
+        notes = ['Resolution', str(nb) + 'bins', qinfo, str(scanned_events) + '_events_scanned', square_side + 'x' + square_side]
+
+        savepath = ''
+        h_title = ''
+
+        for i,note in enumerate(notes):
+                savepath += note 
+                h_title += note
+                if i < (len(notes) - 1):
+                    savepath += '_' 
+                    h_title += ', ' 
+    else:
+        savepath = 'resonly' 
+
+    c.SaveAs("bin/res/" + savepath + ".pdf") 
+    c.SaveAs("bin/res/" + savepath + ".png") 
+    sig_h.SaveAs("bin/res/" + savepath + ".root")
 
     # Automatically open file
-    #os.system('evince ' + 'plot.pdf')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #nb = dt_h.GetNbinsX()
-    #print'number of bins = ',nb
-
-    #res_h = TH2F('res_h','res_h',nb,0,2000,100,-10,0) # Get bounds from dt_h
-
-    #res_h = TGraphAsymmErrors()
-
-    # Arrays
-
-    # x = array('d',[])
-    # y = array('d',[])
-    # xerr = array('d',[])
-    # yerr = array('d',[])
-
-    # # Fit function
-    # g = TF1('g','gaus',-10,0) # Get bounds rom dt_h
-
-    # for i in range(1,nb):
-    #     print'On slice',i
-    #     dt_h_p = dt_h.ProjectionY('dt_h_p',i,i)
-    #     dt_h_p.Fit('g','R')
-
-    #     entries = dt_h_p.GetEntries()
-
-    #     sigma = g.GetParameter(2)
-
-    #     x.append(dt_h.GetXaxis().GetBinLowEdge(i))
-
-    #     if (entries != 0.0):
-    #         y.append(sigma)
-    #     else:
-    #         y.append(0)
-
-    #     xerr.append(0)
-    #     yerr.append(g.GetParError(2))
-
-    # res_h = TGraphAsymmErrors(nb,x,y,xerr,xerr,yerr,yerr)
-
-    # C = TCanvas()
-    # res_h.Draw()
-    # C.SaveAs('plot.pdf')
+    os.system('evince bin/res/' + savepath + '.pdf')

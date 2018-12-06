@@ -17,9 +17,9 @@ def dist_plot(vset):
             element = vset[2]
             direc_path = vset[3]
             square_side = vset[4]
-            varmin = float(vset[5])
-            varmax = float(vset[6])
-            nb = int(vset[7])
+            nb = int(vset[5])
+            varmin = float(vset[6])
+            varmax = float(vset[7])
             max_events = int(vset[8])
             note = vset[9]
 
@@ -30,9 +30,9 @@ def dist_plot(vset):
             element = sys.argv[3]
             direc_path = sys.argv[4]
             square_side = sys.argv[5]
-            varmin = float(sys.argv[6])
-            varmax = float(sys.argv[7])
-            nb = int(sys.argv[8])
+            nb = int(sys.argv[6])
+            varmin = float(sys.argv[7])
+            varmax = float(sys.argv[8])
             max_events = int(sys.argv[9])
             note = sys.argv[10]
 
@@ -164,8 +164,8 @@ def dist_plot(vset):
       h.SetFillColor(kBlue - 3)
       h.Draw()
 
-      c.SaveAs('bin/pdfs/' + savepath + '.pdf')
-      h.SaveAs('bin/roots/' + savepath + '.root')
+      c.SaveAs('bin/tmp/' + savepath + '.pdf')
+      h.SaveAs('bin/tmp/' + savepath + '.root')
 
       # Automatically open file
-      os.system('evince ' + 'bin/pdfs/' + savepath + '.pdf')
+      os.system('evince ' + 'bin/tmp/' + savepath + '.pdf')

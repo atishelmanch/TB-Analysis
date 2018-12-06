@@ -125,8 +125,8 @@ def amp_max_plot(vset):
       #path_notes = []
 
       gStyle.SetStatY(0.9)                                # Y-position (fraction of pad size)                
-      gStyle.SetStatX(0.3)                                # X-position         
-      gStyle.SetStatW(0.2)                                # Width           
+      gStyle.SetStatX(0.2)                                # X-position         
+      gStyle.SetStatW(0.1)                                # Width           
       gStyle.SetStatH(0.1)                                # Height
 
       notes = ['Highest_amp_max', element, str(scanned_events) + '_events_scanned', square_side + 'x' + square_side]
@@ -152,8 +152,8 @@ def amp_max_plot(vset):
 
       h.Draw("COLZ1")
 
-      c.SaveAs('bin/pdfs/' + savepath + '.pdf')
-      h.SaveAs('bin/roots/' + savepath + '.root')
+      c.SaveAs('bin/tmp/' + savepath + '.pdf')
+      h.SaveAs('bin/tmp/' + savepath + '.root')
 
       # Automatically open file
-      os.system('evince ' + 'bin/pdfs/' + savepath + '.pdf')
+      os.system('evince ' + 'bin/tmp/' + savepath + '.pdf')
