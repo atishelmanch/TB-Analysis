@@ -2,7 +2,7 @@
 
 # Import Modules
 import os
-from dtplotter import *
+from dtplot import *
 from amp_max_plotter import *
 from res_plotter import *
 from variable_dict import *

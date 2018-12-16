@@ -6,7 +6,12 @@ def var_d(key):
     #folder = 'H4Analysis/ntuples_25NovC3_MaxEvents'
     #folder = 'H4Analysis/ntuples_27NovC3'
     #folder = 'ntuples_C3'
-    folder = 'ntuples_C3_OnePerEnergy'
+    #folder = 'ntuples_C3_OnePerEnergy'
+    #folder = 'ntuples_v1'
+    folder = '/afs/cern.ch/work/m/mplesser/public/new_matrix_recos/C3_160_18'
+    
+    # Root file combining desired runs 
+    combined_file = '/eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3_without13420.root'
 
     # Define variable dictionary 
     vd = {
@@ -18,11 +23,14 @@ def var_d(key):
         "dt_v1": ['dt',folder, '3', '0','0','1000','-1','0','400','MCP','dt_v1'], # If want MCP1 and MCP2, enter MCP
         "dt_v2": ['dt',folder, '3', '0','0','1000','-1','0','400','MCP','dt_v1'], # If want MCP1 and MCP2, enter MCP
         "dt_v3": ['dt',folder, '3', '0','0','1000','-1','0','-1','C3','dt_v3'], # If want MCP1 and MCP2, enter MCP
-        "dt_v4": ['dt',folder, '3', '150','500','1000','500','0','-1','C3','dt_v4'], # If want MCP1 and MCP2, enter MCP
+        "dt_v4": ['dt',folder, '3', '250','500','50','5000','0','-1','C3','dt_v4'], # If want MCP1 and MCP2, enter MCP
         #"res_v1": ['res', folder, '3', '100','100','15','-1','30','425','MCP','res_v1'], # same as dt but afterwards makes sigma vs. Aeff plot 
         "res_v1": ['res', folder, '3', '100','100','15','-1','30','425','MCP','res_v1'], # same as dt but afterwards makes sigma vs. Aeff plot 
         "res_v2": ['res',folder, '3', '150','500','1000','10000','0','-1','C3','dt_v4'], # If want MCP1 and MCP2, enter MCP
-        "res_v3": ['res',folder, '3', '150','500','1000','5000','0','-1','C3','dt_v4'], # If want MCP1 and MCP2, enter MCP
+        "res_v3": ['res',folder, '3', '200','500','1000','10000','0','-1','C3','dt_v4'], # If want MCP1 and MCP2, enter MCP
+        "MCP12_res": ['res',folder, '3', '200','200','10','-1','40','-1','MCP','MCP12_res'], # If want MCP1 and MCP2, enter MCP
+        "cc": ['2d','t,R','MCP2,MCP2',folder,'10','-1','3','cc'], # Calibration Curves
+        "MCP_res": ['dt',combined_file,'MCP1,MCP2','3']
     }
     # Choose variable set key 
     vs = vd[key]
