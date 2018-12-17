@@ -13,6 +13,14 @@ def var_d(key):
     # Root file combining desired runs 
     combined_file = '/eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3_without13420.root'
 
+    # Other Combined Files:
+
+    # /eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3ud_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3down.root
+    # /eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3ud_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3up.root
+    # /eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3lr_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3left.root
+    # /eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3lr_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3right.root
+
+
     # Define variable dictionary 
     vd = {
         "highest_ampmax": ['amp_max','MCP2', folder, '20', '0','10000','-1','ampmax_v1'],
@@ -30,7 +38,10 @@ def var_d(key):
         "res_v3": ['res',folder, '3', '200','500','1000','10000','0','-1','C3','dt_v4'], # If want MCP1 and MCP2, enter MCP
         "MCP12_res": ['res',folder, '3', '200','200','10','-1','40','-1','MCP','MCP12_res'], # If want MCP1 and MCP2, enter MCP
         "cc": ['2d','t,R','MCP2,MCP2',folder,'10','-1','3','cc'], # Calibration Curves
-        "MCP_res": ['dt',combined_file,'MCP1,MCP2','3']
+        "MCP_res": ['res',combined_file,'MCP1,MCP2','3','10'],
+        "C3u_res": ['res',combined_file,'C3,C4','3','10'],
+        "C3MCP_res": ['res',combined_file,'C3,MCP1','3','10']
+
     }
     # Choose variable set key 
     vs = vd[key]

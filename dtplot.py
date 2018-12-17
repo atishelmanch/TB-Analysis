@@ -17,6 +17,7 @@ def dt_plot(vset):
             combined_file = vset[1]
             elements = vset[2]
             square_side = vset[3]
+            nb = int(vset[4])
             #direc_path = vset[1]
             #square_side = vset[2]
             # A1mincut = vset[3]
@@ -54,22 +55,52 @@ def dt_plot(vset):
       # Get Electronic Elements 
       e_elements = []
       for i,e in enumerate(elements.split(',')):
-            print'e = ',e
+            #print'e = ',e
 
             exec('element' + str(i) + ' = e')
             eval('e_elements.append(e)')
             print 'element' + str(i) + ' = ', eval('element' + str(i))
             #exec('tree_el_' + str(i) + ' = "f.digi.element' + str(i) + '"')
 
-      MCP_dt = False
+      # Dt type depends on two electronic elements 
+      dt_type = ''
+
+      #combined_file = '/eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3_without13420.root'
+
+    # Other Combined Files:
+
+    # /eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3ud_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3down.root
+    # /eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3ud_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3up.root
+    # /eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3lr_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3left.root
+    # /eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3lr_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3right.root
 
       if element0 == 'MCP1' and element1 == 'MCP2':
-            MCP_dt = True
+            dt_type = 'MCPs' 
+            combined_file = '/eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3_without13420.root'
+      elif element0 == 'C3' and element1 == 'C4':
+            #dt_type = 'C3u'
+            dt_type = 'XTALs'
+            combined_file = '/eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3ud_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3up.root'
+      elif element0 == 'C3' and element1 == 'C2':
+            #dt_type = 'C3d'
+            dt_type = 'XTALs'
+            combined_file = '/eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3ud_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3down.root'
+      elif element0 == 'C3' and element1 == 'B3':
+            #dt_type = 'C3l'
+            dt_type = 'XTALs'
+            combined_file = '/eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3lr_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3left.root'
+      elif element0 == 'C3' and element1 == 'D3':
+            #dt_type = 'C3r'
+            dt_type = 'XTALs'
+            combined_file = '/eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3lr_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3right.root'
+      else:
+            dt_type = 'XTALMCP'
+            combined_file = '/eos/user/m/mplesser/matrix_time_analysis_recos/ntuples_C3_160_18/compiled_roots/ECAL_H4_Oct2018_160MHz_18deg_compiled_C3_without13420.root'
 
-      print'e_elements = ',e_elements
+      print'dt type = ',dt_type
 
-      # If it's MCP1/2 dt
-      if MCP_dt:
+      # If it's MCP/MCP or XTAL/XTAL 
+      if dt_type == 'MCPs' or dt_type == 'XTALs':
             # Define variables for each element
             variables = ['fit_time','fit_ampl','b_rms']
             #for v in variables:
@@ -85,6 +116,35 @@ def dt_plot(vset):
             yvar = ft0 + ' - ' + ft1
             xvar = 'pow( 2 / ( (1/pow( ' + fa0 + '/' + noise0 + ', 2)) + (1/pow(' + fa1 + '/' + noise1 + ',2)) ) , 0.5)'
 
+      # Only other option is XTAL/MCP 
+      else:
+            print'not mcp/mcp or xtal/xtal'
+            # Define variables for each element
+            #variables = ['fit_time','fit_ampl','b_rms']
+            #for v in variables:
+                  #for e in e_elements:
+                        #exec('f  v' + '[' + )
+            ft0 = 'fit_time[' + element0 + ']'
+            ft1 = 'fit_time[' + element1 + ']'
+            VC_ft = 'fit_time[VFE_CLK]' # VFE Clock Fit time 
+            fa0 = 'fit_ampl[' + element0 + ']'
+            fa1 = 'fit_ampl[' + element1 + ']'
+            noise0 = 'b_rms[' + element0 + ']'
+            noise1 = 'b_rms[' + element1 + ']'
+
+            # # For 160 MHz
+            correction = 'int((' + ft0 + ' - ' + ft1 +  '+' +  VC_ft + ')/6.238)*6.238' 
+            print'**Using 160 MHz correction**'
+
+            # # For 120 MHz
+            # correction = int((xtal_ft - MCP1_ft + VC_ft)/8.317)*8.317 
+
+            xvar = fa0 
+            yvar = ft0 + '-' + ft1 + '+' + VC_ft + '-' + correction
+            
+            # yvar = ft0 + ' - ' + ft1
+            #xvar = 'pow( 2 / ( (1/pow( ' + fa0 + '/' + noise0 + ', 2)) + (1/pow(' + fa1 + '/' + noise1 + ',2)) ) , 0.5)'      
+
       # Create Cut
 
       cuts = []
@@ -93,11 +153,25 @@ def dt_plot(vset):
       cuts.append('( fabs(fitResult[0].x() + 4) <= ' + str(float(square_side)/2) + ')') 
       cuts.append('( fabs(fitResult[0].y() - 4) <= ' + str(float(square_side)/2) + ')') 
       cuts.append ('track_tree.n_tracks == 1')  
-      if MCP_dt:
+
+      if dt_type == 'MCPs':
             cuts.append('fit_ampl[' + element0 + '] > 100')
             cuts.append('fit_ampl[' + element1 + '] > 100')
+
+      
+      elif dt_type == 'XTALs':
+            # Need to make energy dependent amplitude cuts 
+            # One option may be to create hiso for each energy file then merge 
+            cuts.append('fit_ampl[' + element0 + '] > 1000')
+            cuts.append('fit_ampl[' + element1 + '] > 1000')
             #cuts.append('fit_chi2[' + element0 + '] < 5')
             #cuts.append('fit_ampl[C3] > 4000')
+
+      elif dt_type == 'XTALMCP':
+            # Need energy dependent XTAL amplitude cuts 
+            cuts.append('fit_ampl[' + element0 + '] > 1000')
+            cuts.append('fit_ampl[' + element1 + '] > 100')
+
       #cuts.append('( value >= ' + str(varmin) + ' )' )
       #cuts.append('( value <= ' + str(varmax) + ' )')
 
@@ -113,16 +187,27 @@ def dt_plot(vset):
 
       # Create Histogram
 
-      h = TH2F('h','h',100,0,1000,300,4.5,5.3)
+      if dt_type == 'MCPs': 
+            h = TH2F('h','h',nb,0,600,300,4.5,5.3) 
+      elif dt_type == 'XTALs': 
+            h = TH2F('h','h',nb,200,1600,300,-2,2) 
+      elif dt_type == 'XTALMCP': 
+            h = TH2F('h','h',nb,0,10000,300,-30,30) 
+
+      #print'entries = ',f.h4.GetEntries()
+      events_scanned = f.h4.GetEntries()
 
       f.h4.Draw( yvar + ":" + xvar + " >> h",cut)
       #h.GetYaxis().SetRangeUser(-10,10)
 
       # Create save path 
 
-      if MCP_dt:
-            #notes = ['MCP12',yvar + 'vs' + xvar, square_side + 'x' + square_side]
-            notes = ['MCP12','dtvsA', square_side + 'x' + square_side]
+      if dt_type == 'MCPs':
+            notes = ['MCP12','dtvsAeff', str(events_scanned) + 'eventscanned', square_side + 'x' + square_side]
+      elif dt_type == 'XTALs':
+            notes = [element0 + element1,'dtvsAeff', str(events_scanned) + 'eventscanned', square_side + 'x' + square_side]
+      elif dt_type == 'XTALMCP':
+            notes = [element0 + element1,'dtvsXTALAmp', str(events_scanned) + 'eventscanned', square_side + 'x' + square_side]
       #notes = ['test']
 
       savepath = ''
@@ -141,9 +226,16 @@ def dt_plot(vset):
       #h.SetStats(False)
       h.SetTitle(h_title)
       #h.GetXaxis().SetTitle(variable + '[' + element + ']')
-      h.GetXaxis().SetTitle(xvar)
-      if MCP_dt: 
+      #h.GetXaxis().SetTitle(xvar)
+      if dt_type == 'MCPs': 
             h.GetYaxis().SetTitle('MCP12 dt')
+            h.GetXaxis().SetTitle('MCP12 Aeff/brmseff')
+      elif dt_type == 'XTALs': 
+            h.GetYaxis().SetTitle(element0 + element1 + ' dt')
+            h.GetXaxis().SetTitle(element0 + element1 + ' Aeff/brmseff')
+      elif dt_type == 'XTALMCP': 
+            h.GetYaxis().SetTitle(element0 + element1 + ' dt')
+            h.GetXaxis().SetTitle('fit_ampl[' + element0 + ']')
       #h.GetYaxis().SetTitleOffset(1.5)
 
       #h.SetFillColor(kBlue - 3)
@@ -152,7 +244,6 @@ def dt_plot(vset):
       #h_1.SetMarkerStyle(kFullDotMedium)
       #h_1.SetMarkerColor(kBlue)
       h.Draw("COLZ1")
-      
 
       c.SaveAs('/eos/user/a/atishelm/www/' + savepath + '.png')
       #h.SaveAs('/eos/user/a/atishelm/www/plots/' + savepath + '.root')
@@ -168,5 +259,4 @@ def dt_plot(vset):
 
       h.SetDirectory(0)
 
-      #return h, scanned_events
-      return h
+      return h, events_scanned, dt_type

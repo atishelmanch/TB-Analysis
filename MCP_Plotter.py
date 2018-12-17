@@ -4,7 +4,7 @@
 import os
 from dtplot import *
 from amp_max_plotter import *
-from res_plotter import *
+from res_plot import *
 from variable_dict import *
 from dist_plot import *
 from twodplot import *

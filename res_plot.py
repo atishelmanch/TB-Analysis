@@ -7,10 +7,10 @@ from dtplot import *
 
 def res_plot(vset):
 
-    # if len(vset) > 2:
+    if len(vset) > 2:
 
     #     direc_path = vset[1]
-    #     square_side = vset[2]
+        square_side = vset[3]
     #     A1mincut = vset[3]
     #     A2mincut = vset[4]
     #     nb = int(vset[5]) # number of bins 
@@ -28,7 +28,7 @@ def res_plot(vset):
 
     # From dt_plot
     if len(vset) > 3: 
-        dt_h = dt_plot(vset)
+        dt_h, events_scanned, dt_type = dt_plot(vset)
         #dt_h, scanned_events = dt_plot(vset)
         #x_min = float(vset[7])
 
@@ -48,8 +48,13 @@ def res_plot(vset):
     #ss_fits.Add() 
 
     # Define fit function
-    g = TF1('g','gaus',-5.4,-4.4) # Get bounds from dt_h. This is typical MCP12 bounds for dt  
-    #g = TF1('g','gaus',2,2.5)
+    #g = TF1('g','gaus',-5.4,-4.4) # Get bounds from dt_h. This is typical MCP12 bounds for dt 
+    if dt_type == 'MCPs': 
+        g = TF1('g','gaus',4.6,5.1)
+    elif dt_type == 'XTALs': 
+        g = TF1('g','gaus',-2,2)
+    elif dt_type == 'XTALMCP': 
+        g = TF1('g','gaus',-10,10)
 
     # #-------------------------------------------------------------
 
@@ -92,7 +97,7 @@ def res_plot(vset):
     # mean_err = double_xtal_ball.GetParError(1)
     # res_err  = double_xtal_ball.GetParError(2)
 
-    dt_h.GetYaxis().SetRangeUser(2, 2.7)
+    #dt_h.GetYaxis().SetRangeUser(2, 2.7)
     dt_h.FitSlicesY(g,1,-1,0,"QRO",fit_params) # 0 is underflow bin 
     sig_h = fit_params.At(2)    
     nb = dt_h.GetNbinsX()
@@ -107,7 +112,7 @@ def res_plot(vset):
 
         cc = TCanvas()
         dt_h_tmp.Draw()
-        cc.SaveAs("bin/res/ss_fit" + str(i) + ".png")
+        cc.SaveAs("/eos/user/a/atishelm/www/ss_fit" + str(i) + ".png")
         #os.system('evince' + " bin/res/ss_fit" + str(i) + ".png"
 
     # sig_h_tmp = fit_params.At(2)
@@ -124,7 +129,17 @@ def res_plot(vset):
     #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",30,600.) # 0.001 MCP12
     #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + [1]*[1]) ",20,300) # C3 MCP1
     #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",30,600) # MCP12
-    cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",40,400) # MCP12
+
+    #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",20,550) # MCP12
+
+    if dt_type == 'MCPs': 
+        cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",20,550) # MCP12
+    elif dt_type == 'XTALs': 
+        cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + [1]*[1]) ",200,1600) 
+    elif dt_type == 'XTALMCP': 
+        cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + [1]*[1]) ",200,12000) 
+
+
     cus_f.SetParameters(5, 0.05)
     cus_f.SetParLimits(0,0,5000)
     sig_h.Fit('cus_f','QR')
@@ -145,9 +160,23 @@ def res_plot(vset):
     #gPad.DrawFrame(0.,0.,600.,0.15,"Sigma dt vs. Aeff/brmseff") # For MCP1 
     #sig_h.GetXaxis()
     #c.cd()
-    sig_h.SetTitle("Sigma dt vs. Aeff/brmseff")
-    sig_h.GetYaxis().SetTitle("MCP1/2 sigma dt")
-    sig_h.GetXaxis().SetTitle("MCP1/2 Aeff/brmseff")
+    #sig_h.SetTitle("Sigma dt vs. Aeff/brmseff")
+
+    if dt_type == 'MCPs': 
+            sig_h.GetYaxis().SetTitle('MCP12 sigma_dt')
+            sig_h.GetXaxis().SetTitle('MCP12 Aeff/brmseff')
+    elif dt_type == 'XTALs': 
+            el0 = vset[2].split(',')[-2]
+            el1 = vset[2].split(',')[-1]
+            sig_h.SetTitle(el0 + el1 + 'Sigma dt vs. Aeff/brmseff')
+            sig_h.GetYaxis().SetTitle(el0 + el1 + ' sigma_dt')
+            sig_h.GetXaxis().SetTitle(el0 + el1 + ' Aeff/brmseff')
+    elif dt_type == 'XTALMCP': 
+            el0 = vset[2].split(',')[-2]
+            el1 = vset[2].split(',')[-1]
+            sig_h.SetTitle(el0 + el1 + 'Sigma dt vs. XTAL fit_ampl')
+            sig_h.GetYaxis().SetTitle(el0 + el1 + ' sigma_dt')
+            sig_h.GetXaxis().SetTitle('fit_ampl[' + el0 + ']')
     sig_h.Draw("SAME")
     
     #sig_h.GetXaxis().SetRangeUser(minimum,maximum)
@@ -189,31 +218,54 @@ def res_plot(vset):
     Clatex.DrawLatex(0.3,0.65,cs_str)
     Clatex.SetTextFont(53)
 
-    if len(vset) > 2:
+    # if len(vset) > 2:
 
-        qinfo = str(q_min)
-        if qinfo == '0.0':
-            qinfo = 'NoQuant'
-        else:
-            qinfo = 'Qstart_' + str("{0:.0f}".format(q_min))
+    #     qinfo = str(q_min)
+    #     if qinfo == '0.0':
+    #         qinfo = 'NoQuant'
+    #     else:
+    #         qinfo = 'Qstart_' + str("{0:.0f}".format(q_min))
 
-        #notes = ['Resolution', str(nb) + 'bins', qinfo, str(scanned_events) + '_events_scanned', square_side + 'x' + square_side]
+    #     #notes = ['Resolution', str(nb) + 'bins', qinfo, str(scanned_events) + '_events_scanned', square_side + 'x' + square_side]
 
-        savepath = ''
-        h_title = ''
+    #     savepath = ''
+    #     h_title = ''
 
-        for i,note in enumerate(notes):
-                savepath += note 
-                h_title += note
-                if i < (len(notes) - 1):
-                    savepath += '_' 
-                    h_title += ', ' 
-    else:
-        savepath = 'resonly' 
+    #     for i,note in enumerate(notes):
+    #             savepath += note 
+    #             h_title += note
+    #             if i < (len(notes) - 1):
+    #                 savepath += '_' 
+    #                 h_title += ', ' 
+    # else:
+    #     savepath = 'resonly' 
 
-    c.SaveAs("bin/res/" + savepath + ".pdf") 
-    c.SaveAs("bin/res/" + savepath + ".png") 
-    sig_h.SaveAs("bin/res/" + savepath + ".root")
+
+    if dt_type == 'MCPs':
+        notes = ['MCP12','dtsigvsAeff', str(events_scanned) + 'eventscanned', square_side + 'x' + square_side]
+    elif dt_type == 'XTALs':
+        notes = [el0 + el1,'dtsigvsAeff', str(events_scanned) + 'eventscanned', square_side + 'x' + square_side]
+    elif dt_type == 'XTALMCP':
+        notes = [el0 + el1,'dtsigvXTALAmp', str(events_scanned) + 'eventscanned', square_side + 'x' + square_side]
+
+    savepath = ''
+    h_title = ''
+
+    for i,note in enumerate(notes):
+            savepath += note 
+            h_title += note
+            if i < (len(notes) - 1):
+                savepath += '_' 
+                h_title += ', ' 
+
+    c.SaveAs('/eos/user/a/atishelm/www/' + savepath + '.png')
+    #h.SaveAs('/eos/user/a/atishelm/www/plots/' + savepath + '.root')
+
+    #h.SaveAs('/eos/user/a/atishelm/www/' + savepath + '.root')
+
+    #c.SaveAs("bin/res/" + savepath + ".pdf") 
+    #c.SaveAs("bin/res/" + savepath + ".png") 
+    #sig_h.SaveAs("bin/res/" + savepath + ".root")
 
     # Automatically open file
     #os.system('evince bin/res/' + savepath + '.pdf')
