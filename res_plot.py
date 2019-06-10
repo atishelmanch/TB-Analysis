@@ -28,7 +28,10 @@ def res_plot(vset):
 
     # From dt_plot
     if len(vset) > 3: 
-        dt_h, events_scanned, dt_type = dt_plot(vset)
+        
+        dt_h, mcp_avgs, events_scanned, dt_type = dt_plot(vset)
+        #mcp_avgs = []
+        #f = TFile("/eos/user/a/atishelm/www/C3MCP1_dtvsXTALAmp_741582eventscanned_3x3.root")
         #dt_h, scanned_events = dt_plot(vset)
         #x_min = float(vset[7])
 
@@ -54,7 +57,7 @@ def res_plot(vset):
     elif dt_type == 'XTALs': 
         g = TF1('g','gaus',-2,2)
     elif dt_type == 'XTALMCP': 
-        g = TF1('g','gaus',-10,10)
+        g = TF1('g','gaus',4.55,5)
 
     # #-------------------------------------------------------------
 
@@ -99,9 +102,28 @@ def res_plot(vset):
 
     #dt_h.GetYaxis().SetRangeUser(2, 2.7)
     dt_h.FitSlicesY(g,1,-1,0,"QRO",fit_params) # 0 is underflow bin 
+    # Subtract MCP res
+    
     sig_h = fit_params.At(2)    
+    if dt_type == 'XTALMCP':
+        a = 0
+        b_tmp = 0
+        for b in sig_h:
+            print'a = ',a
+            print'before: ',b
+
+            #print'mcp avg = ',mcp_avgs[a]
+            
+            if b != 0: 
+                if b*b > mcp_avgs[a]*mcp_avgs[a]:
+                    b_tmp = sqrt(b*b - mcp_avgs[a]*mcp_avgs[a])
+                    sig_h.SetBinContent(a,b_tmp)
+                else:
+                    print'would have gotten imaginary value'
+            print'after: ',b_tmp
+            a += 1
+            #sig_h -= mcp_avgs
     nb = dt_h.GetNbinsX()
-    print'nb = ',nb
     for i in range(1, nb + 1): # + 1 to add underflow bin 
     #for i in range(3,4):
         print'i = ',i
@@ -259,6 +281,7 @@ def res_plot(vset):
                 h_title += ', ' 
 
     c.SaveAs('/eos/user/a/atishelm/www/' + savepath + '.png')
+    c.SaveAs('/eos/user/a/atishelm/www/' + savepath + '.jpg')
     #h.SaveAs('/eos/user/a/atishelm/www/plots/' + savepath + '.root')
 
     #h.SaveAs('/eos/user/a/atishelm/www/' + savepath + '.root')

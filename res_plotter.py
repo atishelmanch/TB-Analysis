@@ -3,22 +3,22 @@ from math import fabs,sqrt
 import sys
 import os
 from array import array
-from dtplotter import *
+from dtplot import *
 
 def res_plot(vset):
 
-    if len(vset) > 2:
+    # if len(vset) > 2:
 
-        direc_path = vset[1]
-        square_side = vset[2]
-        A1mincut = vset[3]
-        A2mincut = vset[4]
-        nb = int(vset[5]) # number of bins 
-        max_events = int(vset[6])
-        x_min = float(vset[7])
-        q_min = float(vset[8])
-        XTAL_str = vset[9]
-        note = vset[10]
+    #     direc_path = vset[1]
+    #     square_side = vset[2]
+    #     A1mincut = vset[3]
+    #     A2mincut = vset[4]
+    #     nb = int(vset[5]) # number of bins 
+    #     max_events = int(vset[6])
+    #     x_min = float(vset[7])
+    #     q_min = float(vset[8])
+    #     XTAL_str = vset[9]
+    #     note = vset[10]
 
     gStyle.SetOptFit(1)
 
@@ -28,13 +28,14 @@ def res_plot(vset):
 
     # From dt_plot
     if len(vset) > 3: 
-        dt_h, scanned_events = dt_plot(vset)
-        x_min = float(vset[7])
+        dt_h = dt_plot(vset)
+        #dt_h, scanned_events = dt_plot(vset)
+        #x_min = float(vset[7])
 
     # From already created histogram
     else:
-        #f = TFile("bin/tmp/dt_vs_Aeffo_brmseff_15bins_1712025_events_scanned_3x3.root") 
-        f = TFile("bin/tmp/dt_vs_Aeffo_brmseff_1000bins_Qstart_-1_32000_events_scanned_3x3.root")
+        f = TFile("bin/tmp/dt_vs_Aeffo_brmseff_10bins_Qstart_250_350000_events_scanned_3x3.root") 
+        #f = TFile("bin/tmp/dt_vs_Aeffo_brmseff_1000bins_Qstart_-1_225541_events_scanned_3x3.root")
         
         dt_h = f.Get("h")
 
@@ -47,8 +48,8 @@ def res_plot(vset):
     #ss_fits.Add() 
 
     # Define fit function
-    #g = TF1('g','gaus',-5.4,-4.4) # Get bounds from dt_h 
-    g = TF1('g','gaus',0,4)
+    g = TF1('g','gaus',-5.4,-4.4) # Get bounds from dt_h. This is typical MCP12 bounds for dt  
+    #g = TF1('g','gaus',2,2.5)
 
     # #-------------------------------------------------------------
 
@@ -91,15 +92,17 @@ def res_plot(vset):
     # mean_err = double_xtal_ball.GetParError(1)
     # res_err  = double_xtal_ball.GetParError(2)
 
-    dt_h.FitSlicesY(g,1,-1,0,"QNR",fit_params) # 0 is underflow bin 
-
+    dt_h.GetYaxis().SetRangeUser(2, 2.7)
+    dt_h.FitSlicesY(g,1,-1,0,"QRO",fit_params) # 0 is underflow bin 
+    sig_h = fit_params.At(2)    
     nb = dt_h.GetNbinsX()
-    for i in range(1, nb): # + 1 to add underflow bin 
+    print'nb = ',nb
+    for i in range(1, nb + 1): # + 1 to add underflow bin 
     #for i in range(3,4):
         print'i = ',i
         dt_h_tmp = TH1F()
         dt_h_tmp = dt_h.ProjectionY('dt_h_tmp',i,i)
-        dt_h_tmp.Fit(g,"Q")
+        dt_h_tmp.Fit(g,"QROB")
         #dt_h_tmp.Fit("double_xtal_ball","Q")
 
         cc = TCanvas()
@@ -107,14 +110,25 @@ def res_plot(vset):
         cc.SaveAs("bin/res/ss_fit" + str(i) + ".png")
         #os.system('evince' + " bin/res/ss_fit" + str(i) + ".png"
 
-    sig_h = fit_params.At(2)
+    # sig_h_tmp = fit_params.At(2)
+    # sig_h = TGraphErrors()
+    # sig_h.SetName("sig_h")
+    # #energies = [50, 100, 150, 200, 250]
+    # for i in range(1, nb + 1):
+    #     sig_h.SetPoint(i-1, energies[i-1], sig_h_tmp.GetBinContent(i))
+    #     sig_h.SetPointError(i-1, energies[i-1]*0.01, sig_h_tmp.GetBinError(i))
+        
+    #sig_h = g.GetParameter(2)
 
     #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",x_min,600.) # 0.001
     #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",30,600.) # 0.001 MCP12
-    cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + [1]*[1]) ",0,12000) # C3 MCP1
+    #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + [1]*[1]) ",20,300) # C3 MCP1
+    #cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",30,600) # MCP12
+    cus_f = TF1("cus_f"," sqrt( pow(([0]/x),2) + 2*[1]*[1]) ",40,400) # MCP12
     cus_f.SetParameters(5, 0.05)
-    sig_h.Fit('cus_f','Q')
-    result = sig_h.Fit('cus_f',"SQ") # result is a TFitResultPtr
+    cus_f.SetParLimits(0,0,5000)
+    sig_h.Fit('cus_f','QR')
+    result = sig_h.Fit('cus_f',"SQR") # result is a TFitResultPtr
     #result = sig_h.Fit('cus_f',"SQNRO") # result is a TFitResultPtr
     print'A = ',result.Parameter(0),'+/-',result.ParError(0)
     print'C = ',result.Parameter(1),'+/-',result.ParError(1)
@@ -122,16 +136,18 @@ def res_plot(vset):
     DOF = cus_f.GetNDF()
 
     c0 = TCanvas()
-    sig_h.Draw()
+    #sig_h.Draw("AP")
 
     ymax = c0.GetUymax()
 
     c = TCanvas()
 
     #gPad.DrawFrame(0.,0.,600.,0.15,"Sigma dt vs. Aeff/brmseff") # For MCP1 
-    #sig_h.GetXaxis().
-    c.cd()
-    #sig_h.SetTitle("Sigma dt vs. Aeff/brmseff")
+    #sig_h.GetXaxis()
+    #c.cd()
+    sig_h.SetTitle("Sigma dt vs. Aeff/brmseff")
+    sig_h.GetYaxis().SetTitle("MCP1/2 sigma dt")
+    sig_h.GetXaxis().SetTitle("MCP1/2 Aeff/brmseff")
     sig_h.Draw("SAME")
     
     #sig_h.GetXaxis().SetRangeUser(minimum,maximum)

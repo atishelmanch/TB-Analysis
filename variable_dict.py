@@ -38,9 +38,13 @@ def var_d(key):
         "res_v3": ['res',folder, '3', '200','500','1000','10000','0','-1','C3','dt_v4'], # If want MCP1 and MCP2, enter MCP
         "MCP12_res": ['res',folder, '3', '200','200','10','-1','40','-1','MCP','MCP12_res'], # If want MCP1 and MCP2, enter MCP
         "cc": ['2d','t,R','MCP2,MCP2',folder,'10','-1','3','cc'], # Calibration Curves
-        "MCP_res": ['res',combined_file,'MCP1,MCP2','3','10'],
-        "C3u_res": ['res',combined_file,'C3,C4','3','10'],
-        "C3MCP_res": ['res',combined_file,'C3,MCP1','3','10']
+        "MCPs": ['res',combined_file,'MCP1,MCP2','3','9'],
+        #"C3u_res": ['res',combined_file,'C3,C4','3','10'],
+        "C3u": ['res',combined_file,'C3,C4','3','10'],
+        "C3d": ['res',combined_file,'C3,C2','3','9'],
+        "C3l": ['res',combined_file,'C3,B3','3','9'],
+        "C3r": ['res',combined_file,'C3,D3','3','9'],
+        "C3MCP1": ['res',combined_file,'C3,MCP1','3','10']
 
     }
     # Choose variable set key 

@@ -41,6 +41,7 @@ def dt_plot(vset):
       file_directory = direc_path
 
       for file in os.listdir(str(os.getcwd()) + '/' + str(file_directory)):
+      #for file in direc_path: 
             if '.root' in file:
                   print '     Found File: ',os.path.join(file)
                   file_paths.append(str(file_directory) + '/' + os.path.join(file)) 
@@ -60,7 +61,8 @@ def dt_plot(vset):
 
       #x_min = 20.
       #x_max = 600.
-      x_max = 12000
+      x_max = 400
+      #x_max = 12000
       
       tf = TFile.Open(file_paths[0])
       tree = tf.Get('h4')
@@ -91,20 +93,24 @@ def dt_plot(vset):
 
             print'bins = ',bins
             #h = TH2F('h','h',nb,bins,400,-5.4,-4.4) # With quantile
-            h = TH2F('h','h',nb,bins,1600,0,4) # With quantile
+            #h = TH2F('h','h',nb,bins,1600,0,4) # With quantile
+            #h = TH2F('h','h',nb,bins,1600,0,4) # With quantile
+            h = TH2F('h','h',nb,bins,400,-5,-4) # With quantile, MCP12
 
       else:   
-            bins = array('d', [0,3000,6000,8000,10000,12000])   
+            #bins = array('d', [0,3000,6000,8000,10000,12000])   
+            bins = array('d', [20, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 160, 180, 200, 250, 300, 350])
             #h = TH2F('h','h',nb,x_min,x_max,400,-5.4,-4.4) # Without quantile 
             #h = TH2F('h','h',nb,bins,1200,0,4) # Without quantile 
-            h = TH2F('h','h',5,bins,1200,0,4) # Without quantile, with bins array
-            #h = TH2F('h','h',nb,x_min,x_max,1200,0,4)
+            h = TH2F('h','h',17,bins,400,-5.4,-4.4) # Without quantile, with bins array
+            #h = TH2F('h','h',nb,x_min,x_max,400,-5.4,-4.4)
       #h = TH2F('h','h',nb,x_min,x_max,400,-5.4,-4.4) # Without quantile 
 
       #print'h = ',h
       #print'bins = ',bins
 
-      dth = TH1F('dth','dth',1600,0,4)
+      #dth = TH1F('dth','dth',1600,0,4) # for xtal/MCP
+      dth = TH1F('dth','dth',400,-5,-4) # for MCP's
       Ah = TH1F('Ah','Ah',100,0,10000)
 
       # Histograms for testing
@@ -120,11 +126,11 @@ def dt_plot(vset):
       cuts.append('( fabs(hodox + 4) <= ' + str(float(square_side)/2) + ')') 
       cuts.append('( fabs(hodoy - 4) <= ' + str(float(square_side)/2) + ')') 
       cuts.append('( A1 > ' + A1mincut + ' )' )
-      cuts.append('( time_maximum > 500 )' ) # Adding by hand to keep only one peak of times. Otherwise dt is off 
+      #cuts.append('( time_maximum > 500 )' ) # Adding by hand to keep only one peak of times. Otherwise dt is off 
       #cuts.append('( A1 < 10000 )') # Check overflow bin? 
-      #cuts.append('( A2 > ' + A2mincut + ' )' )
-      cuts.append ('ntracks == 1')
-      cuts.append( 'xtal_ft-int(xtal_ft/6.238)*6.238 < 1.5' ) # phase cut for now. This is for 160 MHz. 
+      cuts.append('( A2 > ' + A2mincut + ' )' )
+      cuts.append ('ntracks == 1')  
+      #cuts.append( 'xtal_ft-int(xtal_ft/6.238)*6.238 < 1.5' ) # phase cut for now. This is for 160 MHz. 
       #cuts.append('( A2 < 10000 )')
 
       cut = ''
@@ -152,36 +158,36 @@ def dt_plot(vset):
             total_num_events = f.h4.GetEntries()
 
             #tfile    = TFile(self.file)
-            infotree = f.Get("info")
-            infotree.GetEntry(0)
-            energy = infotree.Energy
+            # infotree = f.Get("info")
+            # infotree.GetEntry(0)
+            # energy = infotree.Energy
 
-            print'energy = ',energy 
+            # print'energy = ',energy 
 
-            amp_cut = 0
+            # amp_cut = 0
 
-            if (energy - 20.) < 50 < (energy + 20): amp_cut = 1000.
-            if (energy - 20.) < 100 < (energy + 20): amp_cut = 2000.
-            if (energy - 20.) < 150 < (energy + 20): amp_cut = 4000. # 6000 ?
-            if (energy - 20.) < 200 < (energy + 20): amp_cut = 4500. # 8000 ?
-            if (energy - 20.) < 250 < (energy + 20): amp_cut = 6000. # 8500 ?
-            if (energy == 0):
-                  print'energy = 0'
-                  run_num = path.split('.')[-2].split('_')[-1]
-                  print'run number = ',run_num
-                  if run_num == '13267': amp_cut = 1000.
-                  if run_num == '13266': amp_cut = 1000.
-                  if run_num == '13232': amp_cut = 4500.
-                  if run_num == '13231': amp_cut = 4500.
+            # if (energy - 20.) < 50 < (energy + 20): amp_cut = 1000.
+            # if (energy - 20.) < 100 < (energy + 20): amp_cut = 2000.
+            # if (energy - 20.) < 150 < (energy + 20): amp_cut = 4000. # 6000 ?
+            # if (energy - 20.) < 200 < (energy + 20): amp_cut = 6000. # 8000 ?
+            # if (energy - 20.) < 250 < (energy + 20): amp_cut = 8000. # 8500 ?
+            # if (energy == 0):
+            #       print'energy = 0'
+            #       run_num = path.split('.')[-2].split('_')[-1]
+            #       print'run number = ',run_num
+            #       if run_num == '13267': amp_cut = 1000.
+            #       if run_num == '13266': amp_cut = 1000.
+            #       if run_num == '13232': amp_cut = 4500.
+            #       if run_num == '13231': amp_cut = 4500.
 
-            print'amp_cut = ',amp_cut 
-            # If not the first scanned file
-            if file_i != 1:
-                  # remove previous file amp cut
-                  cut = cut[:-25]
+            # print'amp_cut = ',amp_cut 
+            # # If not the first scanned file
+            # if file_i != 1:
+            #       # remove previous file amp cut
+            #       cut = cut[:-25]
 
-            # Add current file amp cut
-            cut += ' and A2 > float(amp_cut) '
+            # # Add current file amp cut
+            # cut += ' and A2 > float(amp_cut) '
 
             #print'cut = ',cut
 
@@ -281,22 +287,22 @@ def dt_plot(vset):
                   #print'cut = ',cut
                   if eval(cut) and A1 != -0.0 and A2 != -0.0:
                         entries += 1
-                        #A_eff = sqrt( 2 / ( (A1/brms1)**(-2) + (A2/brms2)**(-2) ) )
+                        A_eff = sqrt( 2 / ( (A1/brms1)**(-2) + (A2/brms2)**(-2) ) )
                         #print'A2 = ',A2
-                        if (dt < 2):
-                              print'dt = ',dt
-                              print'correction = ',correction
-                              corr_bad.Fill(correction)
+                        #if (dt < 2):
+                              #print'dt = ',dt
+                              #print'correction = ',correction
+                              #corr_bad.Fill(correction)
                               # print'time_maximum = ',time_maximum
                               # print'fit_ampl[C3] = ',xtal_ft
                               # print'MCP1_ft = ',MCP1_ft
                               # print'VC_ft = ',VC_ft
                               #print'A2 = ',A2
                               #print'A2eff = ',A2eff
-                        else:
-                              corr_good.Fill(correction)
-                        h.Fill(A2,dt)
-                        Ah.Fill(A2) 
+                        #else:
+                              #corr_good.Fill(correction)
+                        h.Fill(A_eff,dt)
+                        Ah.Fill(A_eff) 
                         dth.Fill(dt)
 
                         #print'dt = ',dt
